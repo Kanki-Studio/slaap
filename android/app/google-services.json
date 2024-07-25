@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "51789132308",
+    "project_id": "slaap-kanki",
+    "storage_bucket": "slaap-kanki.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51789132308:android:10a0f18f6b1492bc4f6d01",
+        "android_client_info": {
+          "package_name": "com.slaap_kanki.com"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzhZ4QbwU5RimwCcLkIwxyyfMqcrQPx8I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
