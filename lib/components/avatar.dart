@@ -15,7 +15,7 @@ class Avatar extends StatelessWidget {
     final nphotoURL = photoURL;
     return nphotoURL != null
         ? ClipRRect(
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(size / 2),
             child: Image.network(
               nphotoURL,
               width: size,

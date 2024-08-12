@@ -42,7 +42,7 @@ class ChatItem extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // avatar
-            Avatar(size: 52, photoURL: currentAccount.photoURL),
+            Avatar(size: 52, photoURL: account.photoURL),
 
             const SizedBox(width: 12),
 
@@ -55,7 +55,9 @@ class ChatItem extends ConsumerWidget {
                     children: [
                       // name
                       Text(
-                        account.name,
+                        account.id == currentAccount.id
+                            ? "${account.name} (You)"
+                            : account.name,
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 15),
                       ),
