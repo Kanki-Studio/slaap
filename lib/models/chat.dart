@@ -7,49 +7,49 @@ import 'package:slaap/utils/helpers.dart';
 
 class Chat {
   final String id;
+  final ChatType type;
   final Map<String, bool> accounts;
-  final Map<String, Lang> accountLangs;
-  final bool isGroup;
+  final Map<String, Lang> langs;
   Chat({
     required this.id,
+    required this.type,
     required this.accounts,
-    required this.accountLangs,
-    this.isGroup = false,
+    required this.langs,
   });
 
   Chat copyWith({
     String? id,
+    ChatType? type,
     Map<String, bool>? accounts,
-    Map<String, Lang>? accountLangs,
-    bool? isGroup,
+    Map<String, Lang>? langs,
   }) {
     return Chat(
       id: id ?? this.id,
+      type: type ?? this.type,
       accounts: accounts ?? this.accounts,
-      accountLangs: accountLangs ?? this.accountLangs,
-      isGroup: isGroup ?? this.isGroup,
+      langs: langs ?? this.langs,
     );
   }
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'id': id,
+      'type': type.name,
       'accounts': accounts,
-      'accountLangs': accountLangs.map(mapValue((value) => value.toMap())),
-      'isGroup': isGroup,
+      'langs': langs.map(mapValue((value) => value.toMap())),
     };
   }
 
   factory Chat.fromMap(Map<String, dynamic> map) {
     return Chat(
       id: map['id'] as String,
+      type: ChatType.fromJson(map['type']),
       accounts:
           Map<String, bool>.from((map['accounts'] as Map<String, dynamic>)),
-      accountLangs: Map<String, Lang>.from(
-        (map['accountLangs'] as Map<String, dynamic>)
+      langs: Map<String, Lang>.from(
+        (map['langs'] as Map<String, dynamic>)
             .map(mapValue((value) => Lang.fromMap(value))),
       ),
-      isGroup: map['isGroup'] as bool,
     );
   }
 
@@ -60,7 +60,7 @@ class Chat {
 
   @override
   String toString() {
-    return 'Chat(id: $id, accounts: $accounts, accountLangs: $accountLangs, isGroup: $isGroup)';
+    return 'Chat(id: $id, type: $type, accounts: $accounts, langs: $langs)';
   }
 
   @override
@@ -68,16 +68,24 @@ class Chat {
     if (identical(this, other)) return true;
 
     return other.id == id &&
+        other.type == type &&
         mapEquals(other.accounts, accounts) &&
-        mapEquals(other.accountLangs, accountLangs) &&
-        other.isGroup == isGroup;
+        mapEquals(other.langs, langs);
   }
 
   @override
   int get hashCode {
-    return id.hashCode ^
-        accounts.hashCode ^
-        accountLangs.hashCode ^
-        isGroup.hashCode;
+    return id.hashCode ^ type.hashCode ^ accounts.hashCode ^ langs.hashCode;
   }
+}
+
+enum ChatType {
+  dm,
+  self,
+  group;
+
+  String toJson() => json.encode(name);
+
+  factory ChatType.fromJson(String source) =>
+      values.firstWhere((element) => element.name == source);
 }

@@ -1,9 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:slaap/models/lang.dart';
 
 class LangPicker extends StatelessWidget {
   final String title;
-  final void Function(SupportedLang lang) onSelect;
+  final FutureOr<void> Function(SupportedLang lang) onSelect;
   final String? selected;
 
   const LangPicker({
@@ -37,8 +39,8 @@ class LangPicker extends StatelessWidget {
 
                 return GestureDetector(
                   behavior: HitTestBehavior.translucent,
-                  onTap: () {
-                    onSelect(lang);
+                  onTap: () async {
+                    await onSelect(lang);
                     Navigator.of(context).pop();
                   },
                   child: Padding(

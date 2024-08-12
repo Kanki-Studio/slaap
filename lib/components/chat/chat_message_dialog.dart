@@ -46,8 +46,6 @@ class _ChatMessageDialog extends ConsumerState<ChatMessageDialog> {
     final translatedLang = localTransation.to;
     final isFromCurrentAccount = widget.message.senderId == currentAccount.id;
 
-    print(localTransation);
-
     return SafeArea(
       child: Column(
         mainAxisSize: MainAxisSize.min,

@@ -48,12 +48,13 @@ class ChatPage extends ConsumerWidget {
                 builder: (context) {
                   return LangPicker(
                     title: "Select chat receive language",
-                    selected: chat.accountLangs[currentAccount.id]?.receive,
+                    selected: chat.langs[currentAccount.id]?.receive,
                     onSelect: (lang) async {
                       try {
                         await ref.watch(ChatProvider.provider).updateLanguage(
                               lang: Lang(
-                                send: currentAccount.lang.send,
+                                send: chat.langs[currentAccount.id]?.send ??
+                                    currentAccount.lang.send,
                                 receive: lang.value,
                               ),
                               chatId: chat.id,

@@ -15,15 +15,13 @@ class StartPage extends ConsumerWidget {
     Account currentAccount,
     String email,
   ) async {
+    if (email.isEmpty) return;
     try {
       final chat = await ref.read(ChatProvider.provider).startDm(
             email: email,
             currentAccount: currentAccount,
           );
-      if (context.mounted) {
-        context.go(routes.home());
-        context.push(routes.chat(chat.id));
-      }
+      if (context.mounted) context.push(routes.chat(chat.id));
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

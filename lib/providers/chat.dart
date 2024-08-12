@@ -146,12 +146,17 @@ class ChatService {
     required Account currentAccount,
   }) async {
     final otherAccount = await accountService.getAccountByEmail(email);
+    final isSelf = otherAccount.id == currentAccount.id;
 
     var chatQuery = firestore
         .collection("chats")
+        .where(
+          "type",
+          isEqualTo: isSelf ? ChatType.self.name : ChatType.dm.name,
+        )
         .where("accounts.${currentAccount.id}", isEqualTo: true);
-    // prevent duplicate where filter where starting dm with self
-    if (otherAccount.id != currentAccount.id) {
+    // prevent duplicate where filter where starting chat with self
+    if (!isSelf) {
       chatQuery =
           chatQuery.where("accounts.${otherAccount.id}", isEqualTo: true);
     }
@@ -164,17 +169,19 @@ class ChatService {
 
     final newChat = Chat(
       id: "",
+      type: isSelf ? ChatType.self : ChatType.dm,
       accounts: {
         currentAccount.id: true,
         otherAccount.id: true,
       },
-      accountLangs: {
+      langs: {
         currentAccount.id: currentAccount.lang,
         otherAccount.id: otherAccount.lang,
       },
     );
-    await firestore.collection("chats").add(toFirestore(newChat.toMap));
-    return newChat;
+    final doc =
+        await firestore.collection("chats").add(toFirestore(newChat.toMap));
+    return newChat.copyWith(id: doc.id);
   }
 
   ChatTranslationLocal translateMessageLocal({
@@ -182,8 +189,8 @@ class ChatService {
     required Chat chat,
     required Account currentAccount,
   }) {
-    final receiveLang = chat.accountLangs[currentAccount.id]?.receive ??
-        currentAccount.lang.receive;
+    final receiveLang =
+        chat.langs[currentAccount.id]?.receive ?? currentAccount.lang.receive;
     final text = message.lang == receiveLang
         ? message.text
         : message.translations[receiveLang];
@@ -260,7 +267,7 @@ class ChatService {
     required Account currentAccount,
   }) async {
     await firestore.collection("chats").doc(chatId).update({
-      "accountLangs.${currentAccount.id}": lang.toMap(),
+      "langs.${currentAccount.id}": lang.toMap(),
     });
   }
 

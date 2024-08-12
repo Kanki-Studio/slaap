@@ -23,14 +23,16 @@ class ChatHeader extends ConsumerWidget {
 
     return Row(
       children: [
-        Avatar(size: 40, photoURL: currentAccount.photoURL),
+        Avatar(size: 40, photoURL: account.valueOrNull?.photoURL),
         const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               account.when(
-                data: (data) => data.name,
+                data: (data) => data.id == currentAccount.id
+                    ? "${data.name} (You)"
+                    : data.name,
                 error: (e, s) => "Unknown",
                 loading: () => "loading...",
               ),
