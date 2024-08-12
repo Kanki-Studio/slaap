@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:51789132308:android:10a0f18f6b1492bc4f6d01",
+        "mobilesdk_app_id": "1:51789132308:android:ebbcc21a576dd6d34f6d01",
         "android_client_info": {
-          "package_name": "com.slaap_kanki.com"
+          "package_name": "com.kanki.slaap"
         }
       },
       "oauth_client": [],

@@ -1,27 +1,79 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:slaap/router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:slaap/components/chat/chat_header.dart';
+import 'package:slaap/components/chat/chat_input.dart';
+import 'package:slaap/components/chat/chat_messages.dart';
+import 'package:slaap/components/lang/lang_picker.dart';
+import 'package:slaap/models/chat.dart';
+import 'package:slaap/models/lang.dart';
+import 'package:slaap/providers/account.dart';
+import 'package:slaap/providers/chat.dart';
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends ConsumerWidget {
   final String id;
 
   const ChatPage({super.key, required this.id});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final chat = ref.watch(ChatProvider.getChatProvider(id));
+
+    return switch (chat) {
+      AsyncData(:final value) => value != null
+          ? readyChatScreen(context, ref, value)
+          : waitingChatScreen("Something went wrong"),
+      AsyncError() => waitingChatScreen("Something went wrong"),
+      _ => waitingChatScreen("Loading..."),
+    };
+  }
+
+  Scaffold readyChatScreen(BuildContext context, WidgetRef ref, Chat chat) {
+    final currentAccount =
+        ref.watch(AccountProvider.currentAccountProvider).requireValue!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const ChatHeader(),
+        title: ChatHeader(chat: chat),
         actions: [
           IconButton.outlined(
-            icon: const Icon(Icons.settings, size: 22),
+            icon: const Icon(Icons.flag, size: 22),
             padding: const EdgeInsets.all(6),
             constraints: const BoxConstraints(),
             style: IconButton.styleFrom(
               side: BorderSide(color: Colors.grey.shade300),
             ),
             onPressed: () {
-              context.push(Routes.chatSettings(id).path);
+              showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return LangPicker(
+                    title: "Select chat receive language",
+                    selected: chat.accountLangs[currentAccount.id]?.receive,
+                    onSelect: (lang) async {
+                      try {
+                        await ref.watch(ChatProvider.provider).updateLanguage(
+                              lang: Lang(
+                                send: currentAccount.lang.send,
+                                receive: lang.value,
+                              ),
+                              chatId: chat.id,
+                              currentAccount: currentAccount,
+                            );
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: const Text("Failed to update language"),
+                            action: SnackBarAction(
+                              label: "Ok",
+                              onPressed: () {},
+                            ),
+                          ));
+                        }
+                      }
+                    },
+                  );
+                },
+              );
             },
           ),
         ],
@@ -31,210 +83,50 @@ class ChatPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Expanded(
-              child: ListView.builder(
-                reverse: true,
-                itemCount: 20,
-                itemBuilder: (context, index) {
-                  index = 19 - index;
-                  final isLast = index == 20 - 1;
-                  final isSent = (index % 10) + 4 > 6;
-                  final isPrevSent = ((index - 1) % 10) + 4 > 6;
-                  final isLeader = !isPrevSent || index == 0;
-
-                  return ChatMessage(
-                    chatId: id,
-                    messageId: index.toString(),
-                    isLeader: isLeader,
-                    isLast: isLast,
-                    isSent: isSent,
-                  );
-                },
+              child: ChatMessages(
+                chat: chat,
               ),
             ),
-            // message input
-            ChatInput(id: id)
+            ChatInput(chat: chat)
           ],
         ),
       ),
     );
   }
-}
 
-class ChatMessage extends StatelessWidget {
-  const ChatMessage({
-    super.key,
-    required this.chatId,
-    required this.messageId,
-    required this.isLeader,
-    required this.isLast,
-    required this.isSent,
-  });
-
-  final String chatId;
-  final String messageId;
-  final bool isLeader;
-  final bool isLast;
-  final bool isSent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(top: !isLeader ? 6 : 12, bottom: isLast ? 12 : 0),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Align(
-        alignment: isSent ? Alignment.centerRight : Alignment.centerLeft,
-        child: FractionallySizedBox(
-          widthFactor: 0.7,
-          child: GestureDetector(
-            onLongPress: () {
-              context.push(Routes.chatMessage(chatId, messageId).path);
-            },
-            onDoubleTap: () {
-              PersistentBottomSheetController? controller;
-              controller = showBottomSheet(
-                  showDragHandle: true,
-                  constraints: const BoxConstraints(maxHeight: 400),
-                  context: context,
-                  builder: (context) {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text("Hello"),
-                          MaterialButton(
-                            child: const Text("Close"),
-                            onPressed: () {
-                              controller?.close();
-                            },
-                          )
-                        ],
-                      ),
-                    );
-                  });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+  Scaffold waitingChatScreen(String message) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Container(
               decoration: BoxDecoration(
-                color:
-                    isSent ? Colors.blueAccent.shade700 : Colors.grey.shade300,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(
-                    !isSent && isLeader ? 0 : 14,
-                  ),
-                  topRight: Radius.circular(
-                    isSent && isLeader ? 0 : 14,
-                  ),
-                  bottomRight: const Radius.circular(14),
-                  bottomLeft: const Radius.circular(14),
-                ),
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(
-                "Perfect! when can we start with cardio and then move on? $messageId",
-                style: TextStyle(
-                  fontSize: 15,
-                  color: isSent ? Colors.white : Colors.black,
-                ),
-              ),
+              child: const SizedBox(width: 40, height: 40),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class ChatHeader extends StatelessWidget {
-  const ChatHeader({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const SizedBox(width: 40, height: 40),
-        ),
-        const SizedBox(width: 12),
-        const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+            const SizedBox(width: 12),
             Text(
-              "Username",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            Text(
-              "Online",
-              style: TextStyle(fontSize: 14),
+              message,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ],
         ),
-      ],
-    );
-  }
-}
-
-class ChatInput extends StatelessWidget {
-  const ChatInput({
-    super.key,
-    required this.id,
-  });
-
-  final String id;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+        actions: [
+          IconButton.outlined(
+            icon: const Icon(Icons.settings, size: 22),
+            padding: const EdgeInsets.all(6),
+            constraints: const BoxConstraints(),
+            style: IconButton.styleFrom(
+              side: BorderSide(color: Colors.grey.shade300),
+            ),
+            onPressed: () {},
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(2),
-        child: Row(
-          children: [
-            IconButton.outlined(
-              icon: const Icon(Icons.add_rounded, size: 22),
-              padding: const EdgeInsets.all(6),
-              constraints: const BoxConstraints(),
-              style: IconButton.styleFrom(
-                side: BorderSide(color: Colors.grey.shade300),
-              ),
-              onPressed: () {},
-            ),
-            Expanded(
-              child: TextField(
-                maxLines: 4,
-                minLines: 1,
-                cursorHeight: 18,
-                decoration: InputDecoration(
-                  hintText: "Enter message",
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
-                  isDense: true,
-                ),
-              ),
-            ),
-            IconButton.filled(
-              icon: const Icon(Icons.arrow_upward_rounded, size: 22),
-              padding: const EdgeInsets.all(6),
-              constraints: const BoxConstraints(),
-              style: IconButton.styleFrom(
-                  backgroundColor: Colors.blueAccent.shade700),
-              onPressed: () {},
-            ),
-          ],
-        ),
+      body: const SafeArea(
+        child: SizedBox.shrink(),
       ),
     );
   }

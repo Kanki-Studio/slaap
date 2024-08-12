@@ -29,7 +29,9 @@ class TabsLayout extends StatelessWidget {
             NavDestinationItem(
               icon: Icon(
                 Icons.people,
-                color: Colors.grey.shade700,
+                color: navigationShell.currentIndex == 0
+                    ? Colors.grey.shade900
+                    : Colors.grey.shade600,
                 size: 26,
               ),
               onTap: () => goToTab(0),
@@ -37,15 +39,19 @@ class TabsLayout extends StatelessWidget {
             NavDestinationItem(
               icon: Container(
                 decoration: BoxDecoration(
-                  color: Colors.black,
+                  color: navigationShell.currentIndex == 1
+                      ? Colors.blue.withAlpha(50)
+                      : Colors.black,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const SizedBox(
+                child: SizedBox(
                   width: 64,
                   height: 40,
                   child: Icon(
                     Icons.add,
-                    color: Colors.white,
+                    color: navigationShell.currentIndex == 1
+                        ? Colors.grey.shade800
+                        : Colors.white,
                   ),
                 ),
               ),
@@ -54,7 +60,9 @@ class TabsLayout extends StatelessWidget {
             NavDestinationItem(
               icon: Icon(
                 Icons.settings,
-                color: Colors.grey.shade700,
+                color: navigationShell.currentIndex == 2
+                    ? Colors.grey.shade900
+                    : Colors.grey.shade600,
                 size: 26,
               ),
               onTap: () => goToTab(2),
