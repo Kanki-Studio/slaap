@@ -75,6 +75,7 @@ class AccountService {
       email: email,
       name: user.displayName ?? "Unnamed User",
       lang: Lang.all(SupportedLang.english.value),
+      photoURL: user.photoURL,
     );
     await firestore
         .collection("accounts")
